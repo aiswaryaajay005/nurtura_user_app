@@ -1,0 +1,162 @@
+import 'package:flutter/material.dart';
+import 'package:user_app/home_ui.dart';
+import 'package:user_app/main.dart';
+import 'package:user_app/parent_dashboard.dart';
+import 'package:user_app/registration.dart';
+
+class UserLogin extends StatefulWidget {
+  const UserLogin({super.key});
+
+  @override
+  State<UserLogin> createState() => _UserLoginState();
+}
+
+class _UserLoginState extends State<UserLogin> {
+  TextEditingController _emailcontroller = TextEditingController();
+
+  TextEditingController _passwordcontroller = TextEditingController();
+
+  Future<void> login() async {
+    try {
+      await supabase.auth.signInWithPassword(
+          password: _passwordcontroller.text, email: _emailcontroller.text);
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeUi(),
+          ));
+    } catch (e) {
+      print("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Failed to insert data. Please try again.$e"),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.only(top: 100, right: 30, left: 30),
+        children: [
+          Image(
+              image: AssetImage('assets/images/nurtura.png'),
+              height: 200,
+              width: 200),
+          SizedBox(
+            height: 20,
+          ),
+          Column(
+            children: [
+              Text(
+                "Login to your ",
+                style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 40,
+                    color: Colors.deepPurple[400]),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                "account",
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 40,
+                  color: Colors.deepPurple[400],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          Text(
+            "Hello Welcome back to your account",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Form(
+              child: ListView(
+            shrinkWrap: true,
+            children: [
+              TextFormField(
+                controller: _emailcontroller,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'E-mail',
+                    labelStyle: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w500),
+                    hintText: 'example@gmail.com',
+                    suffixIcon: Icon(Icons.email, color: Colors.deepPurple),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple))),
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              TextFormField(
+                controller: _passwordcontroller,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Password',
+                    labelStyle: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w500),
+                    hintText: 'Your password',
+                    suffixIcon:
+                        Icon(Icons.visibility, color: Colors.deepPurple),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple))),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                "Forget Password?",
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+                textAlign: TextAlign.right,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple[300],
+                ),
+                onPressed: () {
+                  login();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegisterForm(),
+                        ));
+                  },
+                  child: Text(
+                    'Create new account',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w500),
+                  ))
+            ],
+          ))
+        ],
+      ),
+    );
+  }
+}

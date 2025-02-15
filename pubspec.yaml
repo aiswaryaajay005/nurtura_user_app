@@ -1,0 +1,39 @@
+name: user_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  image_picker: ^1.1.2
+  intl: ^0.20.2
+  file_picker: ^8.3.1
+  supabase_flutter: ^2.8.3
+  dotted_border: ^2.0.0 
+  smooth_page_indicator: ^1.2.0+3
+  flutter_svg: ^2.0.9 
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/fonts/
+  fonts:
+    - family: AmsterdamThree
+      fonts:
+        - asset: assets/fonts/Amsterdam.ttf 
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Regular.ttf 
+    - family: Cheese
+      fonts:
+        - asset: assets/fonts/MouldyCheeseRegular.ttf 
