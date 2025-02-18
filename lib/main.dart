@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:user_app/account.dart';
+import 'package:user_app/theme_provider.dart';
 import 'package:user_app/user_login.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,7 +13,12 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmbGJxbXpqdWp4c2RiaWR0eWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0NDc1MzUsImV4cCI6MjA1MzAyMzUzNX0.Zo7c3j74r5YTwhvwoaE0ukuWs87JyZtWyuVTtn8KTwI',
   );
-  runApp(MainApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: MainApp(),
+    ),
+  );
 }
 
 final supabase = Supabase.instance.client;
@@ -21,6 +28,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(debugShowCheckedModeBanner: false, home: MainUi());
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: themeProvider.themeData,
+        home: const MainUi());
   }
 }

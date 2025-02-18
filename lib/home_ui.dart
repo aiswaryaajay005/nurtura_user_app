@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:user_app/add_child.dart';
 import 'package:user_app/main.dart';
-import 'package:user_app/parent_dashboard.dart'; // Import the package
+import 'package:user_app/parent_dashboard.dart';
+import 'package:user_app/theme_provider.dart';
 
 class HomeUi extends StatefulWidget {
   const HomeUi({super.key});
@@ -26,8 +29,7 @@ class _HomeUiState extends State<HomeUi> {
   ];
 
   List<Map<String, dynamic>> childdetails = [];
-  PageController _pageController =
-      PageController(); // PageController for PageView
+  final PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -51,21 +53,35 @@ class _HomeUiState extends State<HomeUi> {
     }
   }
 
+  Future<void> viewStatus(int childId, int childStatus) async {
+    if (childStatus == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Under Review"),
+      ));
+    } else if (childStatus == 1) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ParentDashboard(
+              childId: childId,
+            ),
+          ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Application Rejected, your data will be removed soon"),
+      ));
+      await supabase.from('tbl_child').delete().eq('id', childId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.deepPurple,
         title: GestureDetector(
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ParentDashboard(),
-                ));
-          },
+          onTap: () {},
           child: Text(
             "Nurtura",
             style: TextStyle(
@@ -76,6 +92,14 @@ class _HomeUiState extends State<HomeUi> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.brightness_6),
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            },
+          )
+        ],
       ),
       body: Column(
         children: [
@@ -83,7 +107,7 @@ class _HomeUiState extends State<HomeUi> {
           SizedBox(
             height: 400,
             child: PageView.builder(
-              controller: _pageController, // Attach the PageController
+              controller: _pageController,
               itemCount: introCards.length,
               itemBuilder: (context, index) {
                 return Container(
@@ -130,13 +154,11 @@ class _HomeUiState extends State<HomeUi> {
               },
             ),
           ),
-          // SmoothPageIndicator
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: SmoothPageIndicator(
-              controller: _pageController, // Bind the controller here
-              count:
-                  introCards.length, // Set the number of items in the PageView
+              controller: _pageController,
+              count: introCards.length,
               effect: WormEffect(
                 dotWidth: 10,
                 dotHeight: 10,
@@ -164,30 +186,43 @@ class _HomeUiState extends State<HomeUi> {
                           ? CircleAvatar(
                               child: Center(
                                 child: IconButton(
-                                    onPressed: () {}, icon: Icon(Icons.add)),
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => AddChild(),
+                                          ));
+                                    },
+                                    icon: Icon(Icons.add)),
                               ),
                             )
-                          : Container(
-                              padding: EdgeInsets.all(4), // Border thickness
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.deepPurple,
-                                    Colors.purpleAccent
-                                  ],
+                          : GestureDetector(
+                              onTap: () {
+                                viewStatus(childdetails[index]['id'],
+                                    childdetails[index]['child_status']);
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.deepPurple,
+                                      Colors.purpleAccent
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              child: CircleAvatar(
-                                radius: 50,
-                                backgroundImage: childdetails[index]
-                                                ['child_photo']
-                                            ?.isNotEmpty ==
-                                        true
-                                    ? NetworkImage(
-                                        childdetails[index]['child_photo'])
-                                    : const AssetImage(
-                                        'assets/images/colors.jpg'),
+                                child: CircleAvatar(
+                                  radius: 50,
+                                  backgroundImage: childdetails[index]
+                                                  ['child_photo']
+                                              ?.isNotEmpty ==
+                                          true
+                                      ? NetworkImage(
+                                          childdetails[index]['child_photo'])
+                                      : const AssetImage(
+                                          'assets/images/colors.jpg'),
+                                ),
                               ),
                             );
                     },

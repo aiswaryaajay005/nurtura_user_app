@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:user_app/main.dart';
 
 class ViewChildDetails extends StatefulWidget {
-  const ViewChildDetails({super.key});
+  final int chId;
+  const ViewChildDetails({super.key, required this.chId});
 
   @override
   State<ViewChildDetails> createState() => _ViewChildDetailsState();
@@ -21,7 +22,7 @@ class _ViewChildDetailsState extends State<ViewChildDetails> {
     try {
       String userId = supabase.auth.currentUser!.id;
       final response =
-          await supabase.from('tbl_child').select().eq('parent_id', userId);
+          await supabase.from('tbl_child').select().eq('id', widget.chId);
       if (response.isNotEmpty) {
         setState(() {
           childdetails = response;

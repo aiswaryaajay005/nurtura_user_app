@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:user_app/main.dart';
 
 class ViewEvent extends StatefulWidget {
-  const ViewEvent({super.key});
+  final int childId;
+  const ViewEvent({super.key, required this.childId});
 
   @override
   State<ViewEvent> createState() => _ViewEventState();
@@ -10,22 +12,64 @@ class ViewEvent extends StatefulWidget {
 
 class _ViewEventState extends State<ViewEvent> {
   List<Map<String, dynamic>> viewevent = [];
+  Map<int, int> eventResponses = {}; // Store responses for events
   bool isLoading = true;
+
   Future<void> fetchEvent() async {
     try {
       final response = await supabase.from('tbl_event').select();
-
       if (response.isNotEmpty) {
         setState(() {
           viewevent = response;
         });
       }
+
+      // Fetch existing participation responses
+      await fetchResponses();
     } catch (e) {
       print("Error: $e");
     } finally {
       setState(() {
-        isLoading = false; // Stop loading after fetching data
+        isLoading = false;
       });
+    }
+  }
+
+  Future<void> fetchResponses() async {
+    try {
+      final response = await supabase
+          .from('tbl_participate')
+          .select()
+          .eq('child_id', widget.childId);
+
+      if (response.isNotEmpty) {
+        Map<int, int> fetchedResponses = {};
+        for (var entry in response) {
+          fetchedResponses[entry['event_id']] = entry['participate_status'];
+        }
+
+        setState(() {
+          eventResponses = fetchedResponses;
+        });
+      }
+    } catch (e) {
+      print("Error fetching responses: $e");
+    }
+  }
+
+  Future<void> respondToEvent(int eid, int status) async {
+    try {
+      await supabase.from('tbl_participate').upsert({
+        'participate_status': status,
+        'child_id': widget.childId,
+        'event_id': eid
+      });
+
+      setState(() {
+        eventResponses[eid] = status;
+      });
+    } catch (e) {
+      print("Error inserting response: $e");
     }
   }
 
@@ -45,21 +89,20 @@ class _ViewEventState extends State<ViewEvent> {
           ),
         ),
         body: isLoading
-            ? Center(
-                child:
-                    CircularProgressIndicator()) // Show loader while fetching
+            ? Center(child: CircularProgressIndicator())
             : viewevent.isEmpty
                 ? Center(child: Text("No events"))
-                : Expanded(
-                    child: GridView.builder(
+                : GridView.builder(
                     padding: EdgeInsets.all(10),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.8,
+                      childAspectRatio: 0.6,
                     ),
                     itemCount: viewevent.length,
                     itemBuilder: (context, index) {
                       final event = viewevent[index];
+                      final eventId = event['id'];
+
                       return Card(
                         elevation: 5,
                         shape: RoundedRectangleBorder(
@@ -116,13 +159,47 @@ class _ViewEventState extends State<ViewEvent> {
                                 style: TextStyle(
                                     fontSize: 14, color: Colors.black),
                                 overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                                maxLines: 2,
                               ),
+                              SizedBox(height: 15),
+
+                              // Show response message if the parent has responded, otherwise show buttons
+                              eventResponses.containsKey(eventId)
+                                  ? Text(
+                                      eventResponses[eventId] == 1
+                                          ? "✅ You are attending!"
+                                          : "❌ Maybe next time!",
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: eventResponses[eventId] == 1
+                                              ? Colors.green
+                                              : Colors.red),
+                                    )
+                                  : Column(
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              respondToEvent(eventId, 1),
+                                          child: Text('Will be there'),
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green),
+                                        ),
+                                        SizedBox(height: 10),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              respondToEvent(eventId, 0),
+                                          child: Text('Maybe Next Time'),
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red),
+                                        ),
+                                      ],
+                                    ),
                             ],
                           ),
                         ),
                       );
                     },
-                  )));
+                  ));
   }
 }
