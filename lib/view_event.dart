@@ -167,7 +167,7 @@ class _ViewEventState extends State<ViewEvent> {
                               eventResponses.containsKey(eventId)
                                   ? Text(
                                       eventResponses[eventId] == 1
-                                          ? "✅ You are attending!"
+                                          ? "✅ Participating!"
                                           : "❌ Maybe next time!",
                                       style: TextStyle(
                                           fontSize: 14,

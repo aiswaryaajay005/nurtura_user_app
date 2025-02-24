@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:user_app/account.dart';
 import 'package:user_app/add_child.dart';
 import 'package:user_app/all_activities.dart';
+import 'package:user_app/child_leave.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/view_child_details.dart';
 import 'package:user_app/view_event.dart';
@@ -138,48 +139,36 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           spacing: 20,
                           children: [
                             CircleAvatar(
-                              radius: 50,
+                              radius: 70,
                               backgroundImage:
                                   NetworkImage(child['child_photo']),
                             ),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Child Name:',
-                                  style: TextStyle(color: Colors.deepPurple),
+                                  child['child_name'],
+                                  style: TextStyle(
+                                      color: Colors.deepPurple,
+                                      fontFamily: 'Nunito',
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                                Text(child['child_name']),
                               ],
                             ),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Child Gender: ',
-                                  style: TextStyle(color: Colors.deepPurple),
+                                  child['child_dob'],
+                                  style: TextStyle(
+                                      color: Colors.deepPurple,
+                                      fontFamily: 'Nunito',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold),
                                 ),
-                                Text(child['child_gender']),
                               ],
                             ),
-                            Row(
-                              children: [
-                                Text(
-                                  'Date of Birth :',
-                                  style: TextStyle(color: Colors.deepPurple),
-                                ),
-                                Text(child['child_dob']),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  'Child allergy details: ',
-                                  style: TextStyle(color: Colors.deepPurple),
-                                ),
-                                Text(child['child_allergy']),
-                              ],
-                            ),
-                            ElevatedButton(
-                                onPressed: () {}, child: Text('Edit'))
                           ],
                         ),
                       ),
@@ -189,13 +178,15 @@ class _ParentDashboardState extends State<ParentDashboard> {
               ),
 
               const SizedBox(height: 20),
-              Text(
-                "How's your child doing today? ",
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+              Center(
+                child: Text(
+                  "How's your child doing today? ",
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -325,7 +316,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   ),
                 ),
               ),
-
+              SizedBox(height: 20),
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -421,6 +412,30 @@ class _ParentDashboardState extends State<ParentDashboard> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => ViewPost(),
+                        ));
+                  },
+                ),
+              ),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading: Icon(Icons.payment, color: Colors.deepPurple),
+                  title: const Text("Inform Leave Details",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChildLeave(
+                            id: widget.childId,
+                          ),
                         ));
                   },
                 ),

@@ -28,8 +28,7 @@ class _UserLoginState extends State<UserLogin> {
     } catch (e) {
       print("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Failed to insert data. Please try again.$e"),
-        backgroundColor: Colors.red,
+        content: Text("Failed to insert data. Please try again."),
       ));
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:user_app/main.dart';
+import 'package:user_app/user_login.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -166,6 +167,39 @@ class _AccountPageState extends State<AccountPage> {
                         ),
                         child: Text(
                           "Edit Profile",
+                          style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 100, right: 100, top: 30),
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          await supabase.auth.signOut();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => UserLogin(),
+                            ),
+                            (Route<dynamic> route) => false,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple[300],
+                          padding:
+                              EdgeInsets.symmetric(vertical: 15, horizontal: 0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 5,
+                        ),
+                        icon: Icon(Icons.logout_sharp),
+                        label: Text(
+                          "Log out",
                           style: TextStyle(
                               fontSize: 18,
                               color: Colors.white,

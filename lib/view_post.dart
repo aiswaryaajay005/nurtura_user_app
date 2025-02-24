@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:user_app/comments_page.dart';
 import 'package:user_app/main.dart';
 
 class ViewPost extends StatefulWidget {
@@ -67,12 +68,11 @@ class _ViewPostState extends State<ViewPost> {
               child: CircularProgressIndicator()) // Show loader while fetching
           : post.isEmpty
               ? Center(child: Text("No posts available"))
-              : Expanded(
-                  child: GridView.builder(
+              : GridView.builder(
                   padding: EdgeInsets.all(10),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.7,
+                    crossAxisCount: 1,
+                    childAspectRatio: 0.5,
                   ),
                   itemCount: post.length,
                   itemBuilder: (context, index) {
@@ -84,15 +84,15 @@ class _ViewPostState extends State<ViewPost> {
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
-                        child: Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Expanded(
                                 child: Image.network(
                                   postview['post_file'],
-                                  height: 120,
+                                  height: 500,
                                   width: double.infinity,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
@@ -101,49 +101,86 @@ class _ViewPostState extends State<ViewPost> {
                                   },
                                 ),
                               ),
-                              SizedBox(height: 5),
-                              Text(
-                                "Post Name:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              "Post Name:",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
                               ),
-                              Text(
-                                postview['post_title'],
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                            ),
+                            Text(
+                              postview['post_title'],
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
                               ),
-                              SizedBox(height: 10),
-                              Text(
-                                "Posted Time:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              "Posted Time:",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
                               ),
-                              Text(
-                                postview['created_at'],
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                            ),
+                            Text(
+                              postview['created_at'],
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
                               ),
-                            ],
-                          ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            SizedBox(
+                              height: 30,
+                            ),
+                            Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Column(
+                                    children: [
+                                      Icon(
+                                        Icons.thumb_up_off_alt,
+                                        color: Colors.deepPurple,
+                                      ),
+                                      Text('Like')
+                                    ],
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => CommentsPage(
+                                              postId: postview['id'],
+                                            ),
+                                          ));
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.add_comment_sharp,
+                                          color: Colors.deepPurple,
+                                        ),
+                                        Text('Comment')
+                                      ],
+                                    ),
+                                  )
+                                ])
+                          ],
                         ),
                       ),
                     );
                   },
-                )),
+                ),
     );
   }
 }

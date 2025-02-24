@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:user_app/account.dart';
+import 'package:user_app/home_ui.dart';
 import 'package:user_app/theme_provider.dart';
 import 'package:user_app/user_login.dart';
 
@@ -33,6 +34,24 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: themeProvider.themeData,
-        home: const MainUi());
+        home: const AuthWrapper());
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Check if the user is already logged in
+    final user = supabase.auth.currentUser;
+
+    if (user != null) {
+      // If the user is logged in, navigate to the home page
+      return HomeUi();
+    } else {
+      // If the user is not logged in, navigate to the login page
+      return MainUi();
+    }
   }
 }
