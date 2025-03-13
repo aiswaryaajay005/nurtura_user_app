@@ -48,7 +48,9 @@ class _ChildLeaveState extends State<ChildLeave> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Leave Details"),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Colors.deepPurple,
+        title: Text("Leave Details", style: TextStyle(color: Colors.white)),
       ),
       body: Form(
         child: Padding(

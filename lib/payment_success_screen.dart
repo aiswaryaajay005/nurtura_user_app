@@ -17,7 +17,6 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
   void initState() {
     super.initState();
 
-    // Delay for 2 seconds and then navigate to the next screen
     Timer(Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
@@ -32,22 +31,19 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Success color
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Stack(
-              alignment: Alignment.center, // Align everything at the center
+              alignment: Alignment.center,
               children: [
-                // Generate concentric circles dynamically
                 for (int i = 0; i < 4; i++)
                   CircleAvatar(
-                    radius: 100 - (i * 20), // Decrease radius for each circle
+                    radius: 100 - (i * 20),
                     backgroundColor: Colors.deepPurple[100 + (i * 100)],
                   ),
-
-                // Icon at the top
                 Icon(Icons.check, size: 60, color: Colors.white),
               ],
             ),

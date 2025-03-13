@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:user_app/main.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:user_app/parent_dashboard.dart';
 import 'package:user_app/user_login.dart';
 
 class AddChild extends StatefulWidget {
@@ -25,6 +24,53 @@ class _AddChildState extends State<AddChild> {
       setState(() {
         _image = File(pickedFile.path);
       });
+    }
+  }
+
+  File? selectedFile; // Holds the selected file
+
+  Future<void> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedFile = File(result.files.single.path!);
+        _proofcontroller.text = result.files.single.name; // Show file name
+      });
+    }
+  }
+
+  Future<String?> uploadFile() async {
+    if (selectedFile == null) {
+      return "";
+    }
+
+    try {
+      final fileExt = selectedFile!.path.split('.').last;
+      final fileName =
+          'proofs/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+      // Upload file to Supabase Storage
+      await supabase.storage
+          .from('child_profile')
+          .upload(fileName, selectedFile!);
+
+      // Get the public URL
+      final fileUrl =
+          supabase.storage.from('child_profile').getPublicUrl(fileName);
+
+      // Save the URL to the database if needed
+      print("File Uploaded: $fileUrl");
+
+      return fileUrl;
+    } catch (e) {
+      print("Upload Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("File upload failed!")),
+      );
+      return "";
     }
   }
 
@@ -48,9 +94,10 @@ class _AddChildState extends State<AddChild> {
     }
   }
 
-  TextEditingController _datecontroller = TextEditingController();
-  TextEditingController _childnamecontroller = TextEditingController();
-  TextEditingController _allergycontroller = TextEditingController();
+  final TextEditingController _datecontroller = TextEditingController();
+  final TextEditingController _childnamecontroller = TextEditingController();
+  final TextEditingController _allergycontroller = TextEditingController();
+  final TextEditingController _proofcontroller = TextEditingController();
 
   String selectedGender = '';
   Future<void> insertData() async {
@@ -58,6 +105,7 @@ class _AddChildState extends State<AddChild> {
       if (_image != null) {
         String userId = supabase.auth.currentUser!.id;
         String? photoUrl = await _uploadImage(_image!);
+        String? proofUrl = await uploadFile();
         await supabase.from('tbl_child').insert({
           'child_name': _childnamecontroller.text,
           'child_dob': _datecontroller.text.toString(),
@@ -65,6 +113,7 @@ class _AddChildState extends State<AddChild> {
           'child_gender': selectedGender,
           'parent_id': userId,
           'child_photo': photoUrl,
+          'child_docs': proofUrl,
         });
         Navigator.push(
             context,
@@ -132,11 +181,11 @@ class _AddChildState extends State<AddChild> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: DottedBorder(
-                        color: Colors.deepPurple, // Border color
-                        strokeWidth: 2, // Border width
-                        borderType: BorderType.RRect, // Rounded rectangle
-                        radius: Radius.circular(12), // Border radius
-                        dashPattern: [6, 3], // Dash and gap length
+                        color: Colors.deepPurple,
+                        strokeWidth: 2,
+                        borderType: BorderType.RRect,
+                        radius: Radius.circular(12),
+                        dashPattern: [6, 3],
                         child: Card(
                           shadowColor: Colors.deepPurple,
                           child: Column(
@@ -280,6 +329,31 @@ class _AddChildState extends State<AddChild> {
                       hintText: 'Mention allergies if any',
                       prefixIcon:
                           Icon(Icons.sick_outlined, color: Colors.deepPurple),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'Documents',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: pickFile,
+                    child: AbsorbPointer(
+                      child: TextFormField(
+                        readOnly: true,
+                        controller: _proofcontroller,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          hintText: 'Click to select a file',
+                          prefixIcon:
+                              Icon(Icons.upload_file, color: Colors.deepPurple),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),

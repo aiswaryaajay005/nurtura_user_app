@@ -36,7 +36,10 @@ class _ViewChildDetailsState extends State<ViewChildDetails> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: ListView.builder(

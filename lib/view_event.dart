@@ -83,9 +83,11 @@ class _ViewEventState extends State<ViewEvent> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.deepPurple,
+          iconTheme: IconThemeData(color: Colors.white),
           title: Text(
             'View Events',
-            style: TextStyle(color: Colors.deepPurple),
+            style: TextStyle(color: Colors.white),
           ),
         ),
         body: isLoading
@@ -96,7 +98,7 @@ class _ViewEventState extends State<ViewEvent> {
                     padding: EdgeInsets.all(10),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.6,
+                      childAspectRatio: 0.4,
                     ),
                     itemCount: viewevent.length,
                     itemBuilder: (context, index) {
@@ -147,6 +149,38 @@ class _ViewEventState extends State<ViewEvent> {
                               ),
                               SizedBox(height: 10),
                               Text(
+                                "Event Time:",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                              Text(
+                                event['event_time'] ?? "10:00:00",
+                                style: TextStyle(
+                                    fontSize: 14, color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                "Event Venue:",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                              Text(
+                                event['event_venue'] ?? "Common Hall",
+                                style: TextStyle(
+                                    fontSize: 14, color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                              SizedBox(height: 10),
+                              Text(
                                 "Event Details:",
                                 style: TextStyle(
                                   fontSize: 14,
@@ -162,8 +196,6 @@ class _ViewEventState extends State<ViewEvent> {
                                 maxLines: 2,
                               ),
                               SizedBox(height: 15),
-
-                              // Show response message if the parent has responded, otherwise show buttons
                               eventResponses.containsKey(eventId)
                                   ? Text(
                                       eventResponses[eventId] == 1

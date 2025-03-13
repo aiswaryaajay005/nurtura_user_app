@@ -34,7 +34,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: themeProvider.themeData,
-        home: const AuthWrapper());
+        home: const MainUi());
   }
 }
 

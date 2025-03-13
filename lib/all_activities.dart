@@ -28,7 +28,7 @@ class _AllActivitiesState extends State<AllActivities> {
       print("Error: $e");
     } finally {
       setState(() {
-        isLoading = false; // Stop loading after fetching data
+        isLoading = false;
       });
     }
   }
@@ -43,6 +43,7 @@ class _AllActivitiesState extends State<AllActivities> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.deepPurple[300],
         title: Text('View Activity',
             style: TextStyle(

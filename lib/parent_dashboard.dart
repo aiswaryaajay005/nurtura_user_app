@@ -1,12 +1,23 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:user_app/account.dart';
-import 'package:user_app/add_child.dart';
 import 'package:user_app/all_activities.dart';
 import 'package:user_app/child_leave.dart';
+import 'package:user_app/fees_payment.dart';
 import 'package:user_app/main.dart';
+import 'package:user_app/milestones.dart';
+import 'package:user_app/staff_contact.dart';
+import 'package:user_app/view_attendence_percentage.dart';
 import 'package:user_app/view_child_details.dart';
+import 'package:user_app/view_complaints.dart';
 import 'package:user_app/view_event.dart';
+import 'package:user_app/view_notification.dart';
 import 'package:user_app/view_post.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:user_app/view_wish.dart';
+import 'package:user_app/wish_birthday.dart';
 
 class ParentDashboard extends StatefulWidget {
   final int childId;
@@ -17,9 +28,60 @@ class ParentDashboard extends StatefulWidget {
 }
 
 class _ParentDashboardState extends State<ParentDashboard> {
-  TextEditingController _nowcontroller = TextEditingController(
-    text: DateTime.now().toLocal().toString().split(' ')[0],
-  );
+  Future<Map<String, dynamic>?> checkTodaysBirthday() async {
+    String today = DateFormat('MM-dd').format(DateTime.now());
+
+    try {
+      final response = await supabase
+          .from('tbl_child')
+          .select('id, child_name, child_dob, child_photo')
+          .eq('child_dob', today)
+          .eq('id', widget.childId)
+          .maybeSingle();
+
+      return response;
+    } catch (e) {
+      print("Error fetching birthday child: $e");
+      return null;
+    }
+  }
+
+  Future<List<String>> fetchMilestones(int childId) async {
+    print("fetchMilestones called for child ID: $childId");
+
+    final response = await supabase
+        .from('tbl_child')
+        .select('child_dob')
+        .eq('id', childId)
+        .single();
+
+    print("Supabase Response: $response");
+
+    if (response == null || response['child_dob'] == null) {
+      print("Error: Child not found or missing DOB");
+      throw Exception('Child not found or missing DOB');
+    }
+
+    DateTime childDob = DateTime.parse(response['child_dob']);
+    int childAge = DateTime.now().difference(childDob).inDays ~/ 365;
+
+    print("Child DOB: $childDob");
+    print("Calculated Child Age: $childAge");
+
+    List<String> milestonesByAge = milestones
+        .where((milestone) => milestone['age'] == '$childAge years')
+        .map((milestone) => milestone['milestone'] as String)
+        .toList();
+
+    print("Filtered Milestones: $milestonesByAge"); // Debugging
+
+    if (milestonesByAge.isEmpty) {
+      return ["No milestones found for this age."];
+    }
+
+    milestonesByAge.shuffle(Random());
+    return milestonesByAge.take(3).toList();
+  }
 
   List<Map<String, dynamic>> childdetails = [];
   List<Map<String, dynamic>> childactivity = [];
@@ -76,6 +138,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.deepPurple,
         elevation: 0,
         title: const Text(
@@ -87,6 +150,16 @@ class _ParentDashboardState extends State<ParentDashboard> {
               fontSize: 50),
         ),
         actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewNotification(),
+                    ));
+              },
+              icon: Icon(Icons.notifications, color: Colors.white)),
+          const SizedBox(width: 16),
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -104,7 +177,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Color(0xFFEDE7F6)], // Soft purple gradient
+            colors: [Colors.white, Color(0xFFEDE7F6)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -122,6 +195,71 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
                 ),
+              ),
+              SizedBox(height: 20),
+              milestoneCarousel(widget.childId),
+              const SizedBox(height: 20),
+              FutureBuilder<Map<String, dynamic>?>(
+                future: checkTodaysBirthday(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // Show loading spinner
+                  }
+
+                  if (!snapshot.hasData || snapshot.data == null) {
+                    return SizedBox(); // No birthday, show nothing
+                  }
+
+                  var birthdayChild = snapshot.data!;
+
+                  return Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.shade100,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.deepPurple,
+                              blurRadius: 4,
+                              spreadRadius: 2)
+                        ],
+                      ),
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundImage:
+                                birthdayChild['child_photo'] != null
+                                    ? NetworkImage(birthdayChild['child_photo'])
+                                    : AssetImage("assets/default_avatar.png")
+                                        as ImageProvider,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "🎉 Today is ${birthdayChild['child_name']}'s Birthday! 🎂",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ViewWish(childId: birthdayChild['id']),
+                                ),
+                              );
+                            },
+                            child: Text("View Wishes"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               Padding(
@@ -176,7 +314,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   },
                 ),
               ),
-
               const SizedBox(height: 20),
               Center(
                 child: Text(
@@ -323,31 +460,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 ),
                 elevation: 4,
                 child: ListTile(
-                  leading: Icon(Icons.child_care, color: Colors.deepPurple),
-                  title: const Text("Add child details",
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                      )),
-                  trailing:
-                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddChild(),
-                        ));
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              // Example of a Styled Card
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 4,
-                child: ListTile(
-                  leading: Icon(Icons.child_care, color: Colors.deepPurple),
+                  leading: Icon(Icons.event, color: Colors.deepPurple),
                   title: const Text("View Events",
                       style: TextStyle(
                         fontFamily: 'Nunito',
@@ -366,7 +479,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 ),
               ),
               const SizedBox(height: 10),
-
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -393,14 +505,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 ),
               ),
               const SizedBox(height: 10),
-
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
                 elevation: 4,
                 child: ListTile(
-                  leading: Icon(Icons.payment, color: Colors.deepPurple),
+                  leading: Icon(Icons.photo_size_select_actual_outlined,
+                      color: Colors.deepPurple),
                   title: const Text("View Posts",
                       style: TextStyle(
                         fontFamily: 'Nunito',
@@ -416,13 +528,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   },
                 ),
               ),
+              const SizedBox(height: 10),
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
                 elevation: 4,
                 child: ListTile(
-                  leading: Icon(Icons.payment, color: Colors.deepPurple),
+                  leading: Icon(Icons.sticky_note_2, color: Colors.deepPurple),
                   title: const Text("Inform Leave Details",
                       style: TextStyle(
                         fontFamily: 'Nunito',
@@ -440,10 +553,200 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   },
                 ),
               ),
+              const SizedBox(height: 10),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading: Icon(Icons.calendar_month_rounded,
+                      color: Colors.deepPurple),
+                  title: const Text("Attendence Percentage",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                ParentAttendanceCard(childId: widget.childId)));
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading: Icon(Icons.notes, color: Colors.deepPurple),
+                  title: const Text("Compliants Page",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => UserComplaintsPage()));
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading:
+                      Icon(Icons.contact_emergency, color: Colors.deepPurple),
+                  title: const Text("Staff Contact",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => StaffPage()));
+                  },
+                ),
+              ),
+              SizedBox(height: 20),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading: Icon(Icons.event, color: Colors.deepPurple),
+                  title: const Text("Wish birthday",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ViewWish(childId: widget.childId),
+                        ));
+                  },
+                ),
+              ),
+              SizedBox(height: 20),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading: Icon(Icons.event, color: Colors.deepPurple),
+                  title: const Text("Payments",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => FeesPayment()));
+                  },
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget milestoneCarousel(int childId) {
+    return FutureBuilder<List<String>>(
+      future: fetchMilestones(childId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator(color: Colors.white));
+        } else if (snapshot.hasError || snapshot.data!.isEmpty) {
+          return Center(
+            child: Text(
+              "No milestones found for this age.",
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          );
+        }
+
+        List<String> milestones = snapshot.data!;
+
+        return Container(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(),
+          child: CarouselSlider(
+            options: CarouselOptions(
+              height: 200,
+              aspectRatio: 16 / 9,
+              viewportFraction: 0.85,
+              initialPage: 0,
+              enableInfiniteScroll: true,
+              autoPlay: true,
+              autoPlayInterval: Duration(seconds: 3),
+              autoPlayAnimationDuration: Duration(milliseconds: 800),
+              autoPlayCurve: Curves.easeInOut,
+              enlargeCenterPage: true,
+              enlargeFactor: 0.3,
+              scrollDirection: Axis.horizontal,
+            ),
+            items: milestones.map((milestone) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                margin: EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(
+                        "https://images.pexels.com/photos/10116050/pexels-photo-10116050.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"), // Add a soft floral background
+                    fit: BoxFit.cover,
+                    opacity: 0.5,
+                    // Keep it subtle
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.2),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      milestone,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.deepPurple, // Stylish purple text
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 }

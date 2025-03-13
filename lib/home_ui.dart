@@ -2,13 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:user_app/add_child.dart';
 import 'package:user_app/fees_page.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/parent_dashboard.dart';
-import 'package:user_app/theme_provider.dart';
+import 'package:confetti/confetti.dart';
+import 'package:user_app/wish_birthday.dart';
 
 class HomeUi extends StatefulWidget {
   const HomeUi({super.key});
@@ -30,6 +31,117 @@ class _HomeUiState extends State<HomeUi> {
     "assets/images/dolls.svg",
     "assets/images/child.svg"
   ];
+  final ConfettiController _confettiController =
+      ConfettiController(duration: Duration(seconds: 5));
+
+  Future<void> checkAndShowBirthdayDialogue(BuildContext context) async {
+    List<Map<String, dynamic>> todaysBirthdays = await getTodaysBirthdays();
+
+    if (todaysBirthdays.isNotEmpty) {
+      String names =
+          todaysBirthdays.map((child) => child['child_name']).join(', ');
+      birthdayDialogue(context, names);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getTodaysBirthdays() async {
+    String today = DateFormat('MM-dd').format(DateTime.now());
+
+    try {
+      final response = await supabase
+          .from('tbl_child')
+          .select('id, child_name, child_dob, child_photo');
+      if (response.isEmpty) return [];
+
+      List<Map<String, dynamic>> birthdayChildren = response.where((child) {
+        String dob = child['child_dob'];
+        return dob.substring(5) == today;
+      }).toList();
+
+      return birthdayChildren;
+    } catch (e) {
+      print("Error fetching birthdays: $e");
+      return [];
+    }
+  }
+
+  void birthdayDialogue(BuildContext context, String birthdayNames) {
+    _confettiController.play();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: Colors.deepPurple.shade500,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "🎉 We have a birthday today! 🎂",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "$birthdayNames is celebrating their birthday today! Let's make it special!",
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        _confettiController.stop();
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WishBirthday(),
+                            ));
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text("Wish",
+                          style: TextStyle(color: Colors.deepPurple)),
+                    )
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 0,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  colors: [
+                    Colors.white,
+                    Colors.deepPurple,
+                    Colors.red,
+                    Colors.pink,
+                    Colors.blue,
+                    Colors.yellow,
+                    Colors.green
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   List<Map<String, dynamic>> childdetails = [];
   final PageController _pageController = PageController();
@@ -37,7 +149,9 @@ class _HomeUiState extends State<HomeUi> {
   @override
   void initState() {
     super.initState();
+    checkAndShowBirthdayDialogue(context);
     fetchChild();
+    _confettiController.play();
   }
 
   Future<void> fetchChild() async {
@@ -72,9 +186,7 @@ class _HomeUiState extends State<HomeUi> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => FeesPage(
-                    idChild: childId,
-                  )));
+              builder: (context) => ParentDashboard(childId: childId)));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Application Rejected, your data will be removed soon"),
@@ -102,12 +214,22 @@ class _HomeUiState extends State<HomeUi> {
           ),
         ),
         actions: [
+          // IconButton(
+          //   icon: Icon(Icons.brightness_6),
+          //   onPressed: () {
+          //     Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+          //   },
+          // )
           IconButton(
-            icon: Icon(Icons.brightness_6),
-            onPressed: () {
-              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
-            },
-          )
+              onPressed: () {
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) => ViewNotification(),
+                //     ));
+                // birthdayDialogue();
+              },
+              icon: Icon(Icons.notifications, color: Colors.white))
         ],
       ),
       body: SingleChildScrollView(

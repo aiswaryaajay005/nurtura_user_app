@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/user_login.dart';
 
@@ -16,6 +20,64 @@ class _AccountPageState extends State<AccountPage> {
   String userpassword = "";
   String useraddress = "";
   bool isLoading = false;
+  String imageUrl = "";
+
+  File? _image;
+  final ImagePicker _picker = ImagePicker();
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    print(pickedFile);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+      _mediaupload();
+    }
+  }
+
+  Future<void> _mediaupload() async {
+    try {
+      String userId = supabase.auth.currentUser!.id;
+      String? photoUrl;
+      if (_image != null) {
+        photoUrl = await _uploadImage(_image!, userId);
+      }
+      if (photoUrl!.isNotEmpty) {
+        await supabase.from("tbl_parent").update({
+          'parent_photo': photoUrl,
+        }).eq('id', userId);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Photo Added")));
+      } else {
+        print("Photo url is empty");
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Please try Again")));
+      }
+    } catch (e) {
+      print("Error:$e");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error:$e")));
+    }
+  }
+
+  Future<String?> _uploadImage(File image, String userId) async {
+    try {
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('dd-MM-yyyy-HH-mm-ss').format(now);
+      final fileName = '$userId-$formattedDate';
+
+      await supabase.storage.from('parent_profile').upload(fileName, image);
+
+      // Get public URL of the uploaded image
+      final imageUrl =
+          supabase.storage.from('parent_profile').getPublicUrl(fileName);
+      return imageUrl;
+    } catch (e) {
+      print('Image upload failed: $e');
+      return null;
+    }
+  }
+
   Future<void> fetchUser() async {
     try {
       String userId = supabase.auth.currentUser!.id;
@@ -28,6 +90,7 @@ class _AccountPageState extends State<AccountPage> {
           useremail = response['parent_email'];
           userpassword = response['parent_password'];
           useraddress = response['parent_address'];
+          imageUrl = response['parent_photo'] ?? "";
           isLoading = false;
         });
       }
@@ -61,9 +124,15 @@ class _AccountPageState extends State<AccountPage> {
               children: [
                 SizedBox(height: 20),
                 Center(
-                  child: CircleAvatar(
-                    radius: 50,
-                    foregroundImage: AssetImage('assets/images/flower.png'),
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: const Color.fromARGB(97, 123, 56, 56),
+                      backgroundImage: _image != null
+                          ? FileImage(_image!)
+                          : NetworkImage(imageUrl),
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),

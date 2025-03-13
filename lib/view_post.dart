@@ -40,6 +40,7 @@ class _ViewPostState extends State<ViewPost> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.deepPurple[300],
         title: Text('View Post',
             style: TextStyle(
