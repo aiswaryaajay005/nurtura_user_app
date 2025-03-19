@@ -34,7 +34,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: themeProvider.themeData,
-        home: const MainUi());
+        home: AuthWrapper());
   }
 }
 
@@ -43,15 +43,21 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Check if the user is already logged in
-    final user = supabase.auth.currentUser;
+    return StreamBuilder<AuthState>(
+      stream: supabase.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = supabase.auth.currentSession;
 
-    if (user != null) {
-      // If the user is logged in, navigate to the home page
-      return HomeUi();
-    } else {
-      // If the user is not logged in, navigate to the login page
-      return MainUi();
-    }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator()); // Show loading
+        }
+
+        if (session != null && session.user != null) {
+          return HomeUi(); // User is logged in
+        } else {
+          return MainUi(); // User not logged in
+        }
+      },
+    );
   }
 }

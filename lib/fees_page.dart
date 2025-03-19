@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:user_app/form_validation.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/payment_success_screen.dart';
 
@@ -12,8 +14,9 @@ class FeesPage extends StatefulWidget {
 
 class _FeesPageState extends State<FeesPage>
     with SingleTickerProviderStateMixin {
-  int fee = 8500;
+  int fee = 1000;
   TabController? _tabController;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -28,12 +31,13 @@ class _FeesPageState extends State<FeesPage>
   }
 
   Future<void> updateStatus(int childId) async {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     try {
       await supabase
           .from('tbl_child')
-          .update({'child_status': 3}).eq('id', widget.idChild);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Accepted!")));
+          .update({'child_status': 3, 'child_doj': formattedDate}).eq(
+              'id', widget.idChild);
+
       Navigator.push(
           context,
           MaterialPageRoute(
@@ -49,7 +53,8 @@ class _FeesPageState extends State<FeesPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Fee Payment', style: TextStyle(color: Colors.white)),
+        title: Text('Registration Fee Payments',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.deepPurple,
         centerTitle: true,
       ),
@@ -136,37 +141,56 @@ class _FeesPageState extends State<FeesPage>
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("CREDIT CARD NUMBER",
-                  style: TextStyle(color: Colors.deepPurple)),
-              TextFormField(decoration: InputDecoration()),
-              SizedBox(height: 20),
-              Text("CARD HOLDER NAME",
-                  style: TextStyle(color: Colors.deepPurple)),
-              TextFormField(decoration: InputDecoration()),
-              SizedBox(height: 20),
-              Text("EXPIRY", style: TextStyle(color: Colors.deepPurple)),
-              TextFormField(decoration: InputDecoration()),
-              SizedBox(height: 20),
-              Text("CVV", style: TextStyle(color: Colors.deepPurple)),
-              TextFormField(decoration: InputDecoration()),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  updateStatus(widget.idChild);
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.deepPurple,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("CREDIT CARD NUMBER",
+                    style: TextStyle(color: Colors.deepPurple)),
+                TextFormField(
+                    validator: (value) =>
+                        FormValidation.validateCreditCardNumber(value),
+                    decoration: InputDecoration()),
+                SizedBox(height: 20),
+                Text("CARD HOLDER NAME",
+                    style: TextStyle(color: Colors.deepPurple)),
+                TextFormField(
+                  decoration: InputDecoration(),
+                  validator: (value) =>
+                      FormValidation.validateCardHolderName(value),
                 ),
-                child: Center(
-                  child: Text("Pay Now",
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
+                SizedBox(height: 20),
+                Text("EXPIRY", style: TextStyle(color: Colors.deepPurple)),
+                TextFormField(
+                  decoration: InputDecoration(),
+                  validator: (value) =>
+                      FormValidation.validateExpiryDate(value),
                 ),
-              )
-            ],
+                SizedBox(height: 20),
+                Text("CVV", style: TextStyle(color: Colors.deepPurple)),
+                TextFormField(
+                  decoration: InputDecoration(),
+                  validator: (value) => FormValidation.validateCVV(value),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      updateStatus(widget.idChild);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.deepPurple,
+                  ),
+                  child: Center(
+                    child: Text("Pay Now",
+                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -179,26 +203,34 @@ class _FeesPageState extends State<FeesPage>
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("UPI ID", style: TextStyle(color: Colors.deepPurple)),
-              TextFormField(decoration: InputDecoration()),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  updateStatus(widget.idChild);
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.deepPurple,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("UPI ID", style: TextStyle(color: Colors.deepPurple)),
+                TextFormField(
+                  decoration: InputDecoration(),
+                  validator: (value) => FormValidation.validateUpiId(value),
                 ),
-                child: Center(
-                  child: Text("Pay Now",
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-              )
-            ],
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      updateStatus(widget.idChild);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.deepPurple,
+                  ),
+                  child: Center(
+                    child: Text("Pay Now",
+                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),

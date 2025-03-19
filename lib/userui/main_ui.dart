@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:user_app/about_us.dart';
 import 'package:user_app/user_login.dart';
 
 class MainUi extends StatefulWidget {
@@ -115,20 +116,40 @@ class _MainUiState extends State<MainUi> {
             ),
           ),
           showBtn
-              ? ElevatedButton(
-                  style: ButtonStyle(
-                      elevation: WidgetStatePropertyAll(10),
-                      padding: WidgetStatePropertyAll(EdgeInsets.only(
-                          left: 30, right: 30, top: 10, bottom: 15)),
-                      backgroundColor: WidgetStatePropertyAll(Colors.white)),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => UserLogin(),
-                        ));
-                  },
-                  child: Text("Get Started"))
+              ? Column(
+                  children: [
+                    ElevatedButton(
+                        style: ButtonStyle(
+                            elevation: WidgetStatePropertyAll(10),
+                            padding: WidgetStatePropertyAll(EdgeInsets.only(
+                                left: 30, right: 30, top: 10, bottom: 15)),
+                            backgroundColor:
+                                WidgetStatePropertyAll(Colors.white)),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AboutUs(),
+                              ));
+                        },
+                        child: Text("About Us")),
+                    ElevatedButton(
+                        style: ButtonStyle(
+                            elevation: WidgetStatePropertyAll(10),
+                            padding: WidgetStatePropertyAll(EdgeInsets.only(
+                                left: 30, right: 30, top: 10, bottom: 15)),
+                            backgroundColor:
+                                WidgetStatePropertyAll(Colors.white)),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserLogin(),
+                              ));
+                        },
+                        child: Text("Get Started")),
+                  ],
+                )
               : Container()
         ],
       ),

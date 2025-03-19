@@ -12,7 +12,7 @@ class UserLogin extends StatefulWidget {
 
 class _UserLoginState extends State<UserLogin> {
   TextEditingController _emailcontroller = TextEditingController();
-final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   TextEditingController _passwordcontroller = TextEditingController();
 
   Future<void> login() async {
@@ -27,7 +27,7 @@ final _formKey = GlobalKey<FormState>();
     } catch (e) {
       print("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Failed to insert data. Please try again."),
+        content: Text("Enter valid data"),
       ));
     }
   }
@@ -80,96 +80,91 @@ final _formKey = GlobalKey<FormState>();
             height: 15,
           ),
           Form(
-      key: _formKey, // Assign form key
-      child: ListView(
-        shrinkWrap: true,
-        children: [
-          TextFormField(
-            controller: _emailcontroller,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'E-mail',
-              labelStyle:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-              hintText: 'example@gmail.com',
-              suffixIcon: Icon(Icons.email, color: Colors.deepPurple),
-              focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.deepPurple)),
-            ),
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                  .hasMatch(value)) {
-                return 'Enter a valid email address';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 30),
-          TextFormField(
-            controller: _passwordcontroller,
-            obscureText: true, // Hides password input
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Password',
-              labelStyle:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-              hintText: 'Your password',
-              suffixIcon: Icon(Icons.visibility, color: Colors.deepPurple),
-              focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.deepPurple)),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Forget Password?",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-            textAlign: TextAlign.right,
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple[300],
-            ),
-            onPressed: login, 
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(
-                'Login',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RegisterForm(),
+            key: _formKey, // Assign form key
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                TextFormField(
+                  controller: _emailcontroller,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'E-mail',
+                    labelStyle: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w500),
+                    hintText: 'example@gmail.com',
+                    suffixIcon: Icon(Icons.email, color: Colors.deepPurple),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple)),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
+                      return 'Enter a valid email address';
+                    }
+                    return null;
+                  },
                 ),
-              );
-            },
-            child: Text(
-              'Create new account',
-              style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+                SizedBox(height: 30),
+                TextFormField(
+                  controller: _passwordcontroller,
+                  obscureText: true, // Hides password input
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Password',
+                    labelStyle: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w500),
+                    hintText: 'Your password',
+                    suffixIcon:
+                        Icon(Icons.visibility, color: Colors.deepPurple),
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple)),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple[300],
+                  ),
+                  onPressed: login,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      'Login',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RegisterForm(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Create new account',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w500),
+                  ),
+                )
+              ],
             ),
           )
-        ],
-      ),
-    )
         ],
       ),
     );

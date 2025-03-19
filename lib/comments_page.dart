@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:user_app/form_validation.dart';
 import 'package:user_app/main.dart';
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:timeago/timeago.dart' as timeago;
@@ -12,6 +13,7 @@ class CommentsPage extends StatefulWidget {
 }
 
 class _CommentsPageState extends State<CommentsPage> {
+  final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> commentList = [];
   TextEditingController _commentController = TextEditingController();
 
@@ -84,26 +86,32 @@ class _CommentsPageState extends State<CommentsPage> {
           child: Column(
             children: [
               Form(
+                  key: _formKey,
                   child: Row(
-                children: [
-                  CircleAvatar(radius: 30),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                        controller: _commentController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                            hintText: "Enter your comments here...",
-                            suffixIcon: GestureDetector(
-                                onTap: () {
-                                  insertComment();
-                                },
-                                child: Icon(Icons.send)),
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)))),
-                  ),
-                ],
-              )),
+                    children: [
+                      CircleAvatar(radius: 30),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: TextFormField(
+                            validator: (value) =>
+                                FormValidation.validateValue(value),
+                            controller: _commentController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                                hintText: "Enter your comments here...",
+                                suffixIcon: GestureDetector(
+                                    onTap: () {
+                                      if (_formKey.currentState!.validate()) {
+                                        insertComment();
+                                      }
+                                    },
+                                    child: Icon(Icons.send)),
+                                border: OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.grey)))),
+                      ),
+                    ],
+                  )),
               SizedBox(height: 10),
               Expanded(
                 child: ListView.builder(

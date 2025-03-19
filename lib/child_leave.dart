@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:user_app/form_validation.dart';
 import 'package:user_app/main.dart';
 
 class ChildLeave extends StatefulWidget {
@@ -10,6 +11,7 @@ class ChildLeave extends StatefulWidget {
 }
 
 class _ChildLeaveState extends State<ChildLeave> {
+  final _formKey = GlobalKey<FormState>();
   TextEditingController _dateController = TextEditingController();
   TextEditingController _reasoncontroller = TextEditingController();
   // Function to show the date picker
@@ -55,93 +57,100 @@ class _ChildLeaveState extends State<ChildLeave> {
       body: Form(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Leave Date"),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _dateController,
-                readOnly: true,
-                onTap: () => _selectDate(context),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  hintText: "Select a date",
-                  hintStyle: TextStyle(color: Colors.grey),
-                  suffixIcon: Icon(Icons.calendar_today),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Text("Leave Reason"),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: _reasoncontroller,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  hintText: "Enter Reason",
-                  hintStyle: TextStyle(color: Colors.grey),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-              ),
-              SizedBox(height: 20),
-              Center(
-                child: Container(
-                  width: 200,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.purple,
-                        Colors.deepPurpleAccent
-                      ], // Gradient colors
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Leave Date"),
+                SizedBox(height: 10),
+                TextFormField(
+                  validator: (value) => FormValidation.validateDate(value),
+                  controller: _dateController,
+                  readOnly: true,
+                  onTap: () => _selectDate(context),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 5,
-                        offset: Offset(2, 2),
+                    hintText: "Select a date",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    suffixIcon: Icon(Icons.calendar_today),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Text("Leave Reason"),
+                SizedBox(height: 10),
+                TextFormField(
+                  validator: (value) => FormValidation.validateValue(value),
+                  controller: _reasoncontroller,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: "Enter Reason",
+                    hintStyle: TextStyle(color: Colors.grey),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Center(
+                  child: Container(
+                    width: 200,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.purple,
+                          Colors.deepPurpleAccent
+                        ], // Gradient colors
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      insertData();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 5,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          insertData();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 14),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(
-                      "Confirm",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      child: Text(
+                        "Confirm",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
                     ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

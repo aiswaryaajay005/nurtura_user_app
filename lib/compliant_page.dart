@@ -16,12 +16,13 @@ class _ComplaintPageState extends State<ComplaintPage> {
 
   Future<void> submitComplaint() async {
     try {
-      final user = supabase.auth.currentUser; // Get current user
+      final user = supabase.auth.currentUser;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text("You must be logged in to submit a complaint!"),
-              backgroundColor: Colors.red),
+            content: Text("You must be logged in to submit a complaint!"),
+            backgroundColor: Colors.red,
+          ),
         );
         return;
       }
@@ -29,28 +30,34 @@ class _ComplaintPageState extends State<ComplaintPage> {
       if (_complaintController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text("Complaint cannot be empty!"),
-              backgroundColor: Colors.red),
+            content: Text("Complaint cannot be empty!"),
+            backgroundColor: Colors.red,
+          ),
         );
         return;
       }
 
-      await supabase.from('tbl_complaints').insert({
-        'user_id': user.id, // Retrieve user ID automatically
+      print("DEBUG: User ID = ${user.id}"); // Ensure it's a valid UUID
+
+      final response = await supabase.from('tbl_complaints').insert({
+        'user_id': user.id,
         'complaint': _complaintController.text.trim(),
         'status': 'Pending',
-      });
+      }).select();
+
+      print("DEBUG: Insert Response = $response"); // Log response
 
       _complaintController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Complaint Submitted!")),
       );
     } catch (e) {
-      print("Error submitting complaint: $e");
+      print("ERROR: $e"); // Print actual error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("Failed to submit. Try again!"),
-            backgroundColor: Colors.red),
+          content: Text("Error: $e"), // Show error message
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -60,11 +67,9 @@ class _ComplaintPageState extends State<ComplaintPage> {
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
-        title: Text(
-          "Submit a Complaint",
-          style: TextStyle(color: Colors.white),
-        ),
         backgroundColor: Colors.deepPurple,
+        title:
+            Text("Register Complaints", style: TextStyle(color: Colors.white)),
       ),
       body: Padding(
         padding: EdgeInsets.all(20),

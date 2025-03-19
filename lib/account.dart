@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:user_app/edit_password.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/user_login.dart';
 
@@ -21,7 +22,7 @@ class _AccountPageState extends State<AccountPage> {
   String useraddress = "";
   bool isLoading = false;
   String imageUrl = "";
-
+  TextEditingController _ucontroller = TextEditingController();
   File? _image;
   final ImagePicker _picker = ImagePicker();
   Future<void> _pickImage() async {
@@ -99,6 +100,21 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  Future<void> updData(String column) async {
+    try {
+      String eid = supabase.auth.currentUser!.id;
+      await supabase
+          .from('tbl_parent')
+          .update({column: _ucontroller.text}).eq('id', eid);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Edited")));
+      fetchUser();
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error:$e")));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -137,12 +153,26 @@ class _AccountPageState extends State<AccountPage> {
                 ),
                 SizedBox(height: 20),
                 Center(
-                    child: Text(
-                  username,
-                  style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.deepPurple[300]),
+                    child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      username,
+                      style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.deepPurple[300]),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        _showBottomSheet(context, 'parent_name');
+                      },
+                      child: Icon(
+                        Icons.edit,
+                        color: Colors.deepPurple[300],
+                      ),
+                    ),
+                  ],
                 )),
                 SizedBox(height: 20),
                 ListView(
@@ -163,6 +193,16 @@ class _AccountPageState extends State<AccountPage> {
                               color: Colors.grey), // Underline below the text
                         ],
                       ),
+                      trailing: GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Can't edit email")));
+                        },
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.deepPurple[300],
+                        ),
+                      ),
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 50), // Removes extra padding
                     ),
@@ -180,6 +220,15 @@ class _AccountPageState extends State<AccountPage> {
                               thickness: 1,
                               color: Colors.grey), // Underline below the text
                         ],
+                      ),
+                      trailing: GestureDetector(
+                        onTap: () {
+                          _showBottomSheet(context, 'parent_contact');
+                        },
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.deepPurple[300],
+                        ),
                       ),
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 50), // Removes extra padding
@@ -199,6 +248,15 @@ class _AccountPageState extends State<AccountPage> {
                               color: Colors.grey), // Underline below the text
                         ],
                       ),
+                      trailing: GestureDetector(
+                        onTap: () {
+                          _showBottomSheet(context, 'parent_address');
+                        },
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.deepPurple[300],
+                        ),
+                      ),
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 50), // Removes extra padding
                     ),
@@ -210,38 +268,28 @@ class _AccountPageState extends State<AccountPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Password'),
-                          Text(userpassword,
+                          Text("********",
                               style: TextStyle(color: Colors.grey)),
                           Divider(
                               thickness: 1,
                               color: Colors.grey), // Underline below the text
                         ],
                       ),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 50), // Removes extra padding
-                    ),
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(left: 100, right: 100, top: 30),
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple[300],
-                          padding:
-                              EdgeInsets.symmetric(vertical: 15, horizontal: 0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          elevation: 5,
-                        ),
-                        child: Text(
-                          "Edit Profile",
-                          style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
+                      trailing: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditPassword(),
+                              ));
+                        },
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.deepPurple[300],
                         ),
                       ),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 50), // Removes extra padding
                     ),
                     Padding(
                       padding:
@@ -280,6 +328,50 @@ class _AccountPageState extends State<AccountPage> {
                 )
               ],
             ),
+    );
+  }
+
+  void _showBottomSheet(BuildContext context, String column) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled:
+          true, // This ensures the bottom sheet takes up as much space as needed
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // TextField
+              TextFormField(
+                controller: _ucontroller,
+                decoration: InputDecoration(
+                  labelText: 'Enter something',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Save Button
+              ElevatedButton(
+                onPressed: () {
+                  updData(column);
+                  print('Saved!');
+                  Navigator.pop(context); // Close the bottom sheet
+                },
+                child: Text('Save'),
+              ),
+              SizedBox(height: 10),
+              // Cancel Button
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                },
+                child: Text('Close'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

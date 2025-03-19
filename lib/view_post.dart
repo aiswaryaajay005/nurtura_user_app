@@ -11,22 +11,99 @@ class ViewPost extends StatefulWidget {
 
 class _ViewPostState extends State<ViewPost> {
   List<Map<String, dynamic>> post = [];
+  Map<int, int> likesCount = {}; // Stores number of likes per post
+  Set<int> userLikedPosts = {}; // Stores posts the user has liked
   bool isLoading = true;
+  int userId = 1; // Example user ID (replace with actual user session ID)
+
   Future<void> fetchPost() async {
     try {
       final response = await supabase.from('tbl_post').select();
-
       if (response.isNotEmpty) {
         setState(() {
           post = response;
         });
       }
+
+      // Fetch likes after fetching posts
+      await fetchLikes();
     } catch (e) {
       print("Error: $e");
     } finally {
       setState(() {
-        isLoading = false; // Stop loading after fetching data
+        isLoading = false;
       });
+    }
+  }
+
+  Future<void> fetchLikes() async {
+    try {
+      final likesResponse = await supabase.from('tbl_like').select();
+
+      Map<int, int> likeCounts = {};
+      Set<int> likedPosts = {};
+
+      for (var like in likesResponse) {
+        int postId = like['post_id'];
+        likeCounts[postId] = (likeCounts[postId] ?? 0) + 1;
+        if (like['user_id'] == userId) {
+          likedPosts.add(postId);
+        }
+      }
+
+      setState(() {
+        likesCount = likeCounts;
+        userLikedPosts = likedPosts;
+      });
+    } catch (e) {
+      print("Error fetching likes: $e");
+    }
+  }
+
+  Future<void> toggleLike(int postId) async {
+    try {
+      final user = supabase.auth.currentUser; // Get the logged-in user
+      if (user == null) {
+        print("User not logged in");
+        return;
+      }
+
+      final userId = user.id; // Get user_id as UUID (String)
+
+      // Check if user already liked the post
+      final existingLike = await supabase
+          .from('tbl_like')
+          .select()
+          .eq('user_id', userId)
+          .eq('post_id', postId)
+          .maybeSingle();
+
+      if (existingLike != null) {
+        // Unlike (delete the like)
+        await supabase
+            .from('tbl_like')
+            .delete()
+            .match({'user_id': userId, 'post_id': postId});
+
+        setState(() {
+          userLikedPosts.remove(postId);
+          likesCount[postId] = (likesCount[postId] ?? 1) - 1;
+        });
+      } else {
+        // Like (insert new row)
+        await supabase.from('tbl_like').insert({
+          'user_id': userId, // UUID as a String
+          'post_id': postId, // int8 as an integer
+          'created_at': DateTime.now().toIso8601String(),
+        });
+
+        setState(() {
+          userLikedPosts.add(postId);
+          likesCount[postId] = (likesCount[postId] ?? 0) + 1;
+        });
+      }
+    } catch (e) {
+      print("Error toggling like: $e");
     }
   }
 
@@ -65,19 +142,16 @@ class _ViewPostState extends State<ViewPost> {
         ],
       ),
       body: isLoading
-          ? Center(
-              child: CircularProgressIndicator()) // Show loader while fetching
+          ? Center(child: CircularProgressIndicator())
           : post.isEmpty
               ? Center(child: Text("No posts available"))
-              : GridView.builder(
+              : ListView.builder(
                   padding: EdgeInsets.all(10),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    childAspectRatio: 0.5,
-                  ),
                   itemCount: post.length,
                   itemBuilder: (context, index) {
                     final postview = post[index];
+                    int postId = postview['id'];
+
                     return Card(
                       elevation: 5,
                       shape: RoundedRectangleBorder(
@@ -90,17 +164,15 @@ class _ViewPostState extends State<ViewPost> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Expanded(
-                                child: Image.network(
-                                  postview['post_file'],
-                                  height: 500,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.broken_image,
-                                        size: 100, color: Colors.grey);
-                                  },
-                                ),
+                              child: Image.network(
+                                postview['post_file'],
+                                height: 300,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(Icons.broken_image,
+                                      size: 100, color: Colors.grey);
+                                },
                               ),
                             ),
                             SizedBox(height: 5),
@@ -139,43 +211,54 @@ class _ViewPostState extends State<ViewPost> {
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
-                            SizedBox(
-                              height: 30,
-                            ),
+                            SizedBox(height: 20),
                             Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => toggleLike(postId),
+                                  child: Row(
                                     children: [
                                       Icon(
-                                        Icons.thumb_up_off_alt,
-                                        color: Colors.deepPurple,
+                                        userLikedPosts.contains(postId)
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: userLikedPosts.contains(postId)
+                                            ? Colors.red
+                                            : Colors.deepPurple,
                                       ),
-                                      Text('Like')
+                                      SizedBox(width: 5),
+                                      Text(
+                                        likesCount[postId]?.toString() ?? "0",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                     ],
                                   ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => CommentsPage(
-                                              postId: postview['id'],
-                                            ),
-                                          ));
-                                    },
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.add_comment_sharp,
-                                          color: Colors.deepPurple,
-                                        ),
-                                        Text('Comment')
-                                      ],
-                                    ),
-                                  )
-                                ])
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => CommentsPage(
+                                            postId: postId,
+                                          ),
+                                        ));
+                                  },
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.add_comment_sharp,
+                                        color: Colors.deepPurple,
+                                      ),
+                                      Text('Comment')
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
                           ],
                         ),
                       ),

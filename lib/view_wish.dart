@@ -37,11 +37,16 @@ class _ViewWishState extends State<ViewWish> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.deepPurple,
+        title: Text(
+          "View Birthday Wishes",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: wishes.isEmpty
           ? Center(
-              child: Text("No wishes"),
+              child: Text("Seems like your birthday is not today!!"),
             )
           : ListView.builder(
               shrinkWrap: true,

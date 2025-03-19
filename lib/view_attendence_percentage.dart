@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:intl/intl.dart';
-
+import 'package:user_app/attendence_calender.dart';
 import 'package:user_app/main.dart';
 
 class ParentAttendanceCard extends StatefulWidget {
   final int childId;
 
-  const ParentAttendanceCard({required this.childId});
+  const ParentAttendanceCard({Key? key, required this.childId})
+      : super(key: key);
 
   @override
   _ParentAttendanceCardState createState() => _ParentAttendanceCardState();
@@ -30,11 +31,8 @@ class _ParentAttendanceCardState extends State<ParentAttendanceCard> {
     try {
       DateTime now = DateTime.now();
       DateTime firstDayOfMonth = DateTime(now.year, now.month, 1);
-
-      // Get total working days (Monday-Friday)
       totalWorkingDays = _calculateWorkingDays(firstDayOfMonth, now);
 
-      // Fetch child details
       final childResponse = await supabase
           .from('tbl_child')
           .select('child_name, child_photo')
@@ -47,7 +45,6 @@ class _ParentAttendanceCardState extends State<ParentAttendanceCard> {
             "https://example.com/default-profile.png";
       }
 
-      // Fetch attendance records
       final attendanceResponse = await supabase
           .from('tbl_childattendence')
           .select('attendence_status')
@@ -55,23 +52,20 @@ class _ParentAttendanceCardState extends State<ParentAttendanceCard> {
           .gte('attendence_date', DateFormat('yyyy-MM-01').format(now))
           .lte('attendence_date', DateFormat('yyyy-MM-dd').format(now));
 
-      // Count Present Days
       attendedDays = attendanceResponse
           .where((record) => record['attendence_status'] == 1)
           .length;
 
-      // Calculate percentage
       if (totalWorkingDays > 0) {
         attendancePercentage = (attendedDays / totalWorkingDays);
       }
 
-      setState(() {}); // Update UI
+      setState(() {});
     } catch (e) {
       print("Error fetching data: $e");
     }
   }
 
-  // Function to count working days (excluding weekends)
   int _calculateWorkingDays(DateTime start, DateTime end) {
     int count = 0;
     for (var day = start;
@@ -90,51 +84,70 @@ class _ParentAttendanceCardState extends State<ParentAttendanceCard> {
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.deepPurple,
-        title: Text("Attendence "),
+        title: Text(
+          "Attendance",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(100),
-        child: Card(
-          shadowColor: Colors.deepPurple,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          elevation: 4,
+      body: Center(
+        // This centers the entire column
+        child: SingleChildScrollView(
+          // Prevents overflow issues
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 20,
-              children: [
-                SizedBox(width: 10),
-                SizedBox(
-                  height: 100,
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        childName,
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
+              elevation: 6,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(childPhoto),
+                      radius: 40,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      childName,
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Text("Total Days: $totalWorkingDays"),
+                    Text("Present Days: $attendedDays"),
+                    SizedBox(height: 20),
+                    CircularPercentIndicator(
+                      radius: 80.0,
+                      lineWidth: 10.0,
+                      percent: attendancePercentage,
+                      center: Text(
+                        "${(attendancePercentage * 100).toStringAsFixed(2)}%",
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold, fontSize: 18),
                       ),
-                      Text("Total Days  : $totalWorkingDays"),
-                      Text("Present Days: $attendedDays"),
-                    ],
-                  ),
+                      progressColor: Colors.green,
+                      backgroundColor: Colors.grey[300]!,
+                      circularStrokeCap: CircularStrokeCap.round,
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AttendanceCalendarPage(childId: widget.childId),
+                          ),
+                        );
+                      },
+                      child: Text("View Attendance Calendar"),
+                    ),
+                  ],
                 ),
-                CircularPercentIndicator(
-                  radius: 70.0,
-                  lineWidth: 8.0,
-                  percent: attendancePercentage,
-                  center: Text(
-                    "${(attendancePercentage * 100).toStringAsFixed(2)}%",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  progressColor: Colors.green,
-                  backgroundColor: Colors.grey[300]!,
-                  circularStrokeCap: CircularStrokeCap.round,
-                ),
-              ],
+              ),
             ),
           ),
         ),

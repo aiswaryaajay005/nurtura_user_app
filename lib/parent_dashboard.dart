@@ -13,11 +13,11 @@ import 'package:user_app/view_attendence_percentage.dart';
 import 'package:user_app/view_child_details.dart';
 import 'package:user_app/view_complaints.dart';
 import 'package:user_app/view_event.dart';
+import 'package:user_app/view_meal.dart';
 import 'package:user_app/view_notification.dart';
 import 'package:user_app/view_post.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:user_app/view_wish.dart';
-import 'package:user_app/wish_birthday.dart';
 
 class ParentDashboard extends StatefulWidget {
   final int childId;
@@ -72,8 +72,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
         .where((milestone) => milestone['age'] == '$childAge years')
         .map((milestone) => milestone['milestone'] as String)
         .toList();
-
-    print("Filtered Milestones: $milestonesByAge"); // Debugging
 
     if (milestonesByAge.isEmpty) {
       return ["No milestones found for this age."];
@@ -485,32 +483,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 ),
                 elevation: 4,
                 child: ListTile(
-                  leading:
-                      Icon(Icons.child_care_sharp, color: Colors.deepPurple),
-                  title: const Text("View child details",
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                      )),
-                  trailing:
-                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViewChildDetails(
-                            chId: widget.childId,
-                          ),
-                        ));
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 4,
-                child: ListTile(
                   leading: Icon(Icons.photo_size_select_actual_outlined,
                       color: Colors.deepPurple),
                   title: const Text("View Posts",
@@ -620,7 +592,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   },
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -644,14 +616,15 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   },
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
                 elevation: 4,
                 child: ListTile(
-                  leading: Icon(Icons.event, color: Colors.deepPurple),
+                  leading:
+                      Icon(Icons.payments_rounded, color: Colors.deepPurple),
                   title: const Text("Payments",
                       style: TextStyle(
                         fontFamily: 'Nunito',
@@ -659,8 +632,36 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   trailing:
                       Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => FeesPayment()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => FeesPayment(
+                                  idChild: widget.childId,
+                                )));
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 4,
+                child: ListTile(
+                  leading:
+                      Icon(Icons.child_care_sharp, color: Colors.deepPurple),
+                  title: const Text("View meal details",
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                      )),
+                  trailing:
+                      Icon(Icons.arrow_forward_ios, color: Colors.deepPurple),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ViewMeal(),
+                        ));
                   },
                 ),
               ),

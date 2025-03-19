@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:user_app/main.dart';
 
@@ -11,6 +12,8 @@ class ViewEvent extends StatefulWidget {
 }
 
 class _ViewEventState extends State<ViewEvent> {
+  String? eventStatus;
+  Color? statusColor;
   List<Map<String, dynamic>> viewevent = [];
   Map<int, int> eventResponses = {}; // Store responses for events
   bool isLoading = true;
@@ -105,6 +108,26 @@ class _ViewEventState extends State<ViewEvent> {
                       final event = viewevent[index];
                       final eventId = event['id'];
 
+                      // Convert event date to DateTime format
+                      DateTime eventDate = DateTime.parse(event['event_date']);
+                      DateTime today = DateTime.now();
+
+                      String eventStatus;
+                      Color statusColor;
+
+                      if (eventDate.isAfter(today)) {
+                        eventStatus = "Happening Soon";
+                        statusColor = Colors.blue;
+                      } else if (eventDate.year == today.year &&
+                          eventDate.month == today.month &&
+                          eventDate.day == today.day) {
+                        eventStatus = "Happening Now";
+                        statusColor = Colors.orange;
+                      } else {
+                        eventStatus = "Completed";
+                        statusColor = Colors.grey;
+                      }
+
                       return Card(
                         elevation: 5,
                         shape: RoundedRectangleBorder(
@@ -116,20 +139,17 @@ class _ViewEventState extends State<ViewEvent> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               SizedBox(height: 10),
-                              Text(
-                                "Event Name:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
+
+                              Center(
+                                child: Text(
+                                  event['event_name'],
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.deepPurple,
+                                      fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                              ),
-                              Text(
-                                event['event_name'],
-                                style: TextStyle(
-                                    fontSize: 14, color: Colors.black),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
                               ),
                               SizedBox(height: 10),
                               Text(
@@ -141,12 +161,13 @@ class _ViewEventState extends State<ViewEvent> {
                                 ),
                               ),
                               Text(
-                                event['event_date'],
+                                DateFormat('yyyy-MM-dd').format(eventDate),
                                 style: TextStyle(
                                     fontSize: 14, color: Colors.black),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                               ),
+                              SizedBox(height: 10),
                               SizedBox(height: 10),
                               Text(
                                 "Event Time:",
@@ -196,6 +217,23 @@ class _ViewEventState extends State<ViewEvent> {
                                 maxLines: 2,
                               ),
                               SizedBox(height: 15),
+                              // Event Status
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  eventStatus,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
                               eventResponses.containsKey(eventId)
                                   ? Text(
                                       eventResponses[eventId] == 1
@@ -205,17 +243,22 @@ class _ViewEventState extends State<ViewEvent> {
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                           color: eventResponses[eventId] == 1
-                                              ? Colors.green
-                                              : Colors.red),
+                                              ? Colors.white
+                                              : Colors.deepPurple),
                                     )
                                   : Column(
                                       children: [
                                         ElevatedButton(
                                           onPressed: () =>
                                               respondToEvent(eventId, 1),
-                                          child: Text('Will be there'),
+                                          child: Text(
+                                            'Will be there',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
                                           style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green),
+                                              backgroundColor:
+                                                  Colors.deepPurple),
                                         ),
                                         SizedBox(height: 10),
                                         ElevatedButton(
@@ -223,7 +266,7 @@ class _ViewEventState extends State<ViewEvent> {
                                               respondToEvent(eventId, 0),
                                           child: Text('Maybe Next Time'),
                                           style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red),
+                                              backgroundColor: Colors.white),
                                         ),
                                       ],
                                     ),
@@ -231,7 +274,6 @@ class _ViewEventState extends State<ViewEvent> {
                           ),
                         ),
                       );
-                    },
-                  ));
+                    }));
   }
 }

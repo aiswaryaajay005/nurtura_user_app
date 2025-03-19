@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:user_app/add_child.dart';
+import 'package:user_app/form_validation.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/user_login.dart';
 
@@ -13,6 +14,7 @@ class RegisterForm extends StatefulWidget {
 }
 
 class _RegisterFormState extends State<RegisterForm> {
+  final _formKey = GlobalKey<FormState>();
   TextEditingController _namecontroller = TextEditingController();
   TextEditingController _emailcontroller = TextEditingController();
   TextEditingController _contactcontroller = TextEditingController();
@@ -34,14 +36,19 @@ class _RegisterFormState extends State<RegisterForm> {
 
   Future<void> storeData(final uid) async {
     try {
-      await supabase.from("tbl_parent").insert({
-        'id': uid,
-        'parent_name': _namecontroller.text,
-        'parent_email': _emailcontroller.text,
-        'parent_contact': _contactcontroller.text,
-        'parent_password': _passwordcontroller.text,
-        'parent_address': _addresscontroller.text,
-      });
+      if (_passwordcontroller.text == _repeatcontroller.text) {
+        await supabase.from("tbl_parent").insert({
+          'id': uid,
+          'parent_name': _namecontroller.text,
+          'parent_email': _emailcontroller.text,
+          'parent_contact': _contactcontroller.text,
+          'parent_password': _passwordcontroller.text,
+          'parent_address': _addresscontroller.text,
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Check passwords and try again")));
+      }
       _namecontroller.clear();
       _emailcontroller.clear();
       _contactcontroller.clear();
@@ -52,6 +59,8 @@ class _RegisterFormState extends State<RegisterForm> {
             builder: (context) => AddChild(),
           ));
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Try Again after checking all fields")));
       print("Error storing data: $e");
     }
   }
@@ -64,6 +73,7 @@ class _RegisterFormState extends State<RegisterForm> {
         backgroundColor: Colors.white,
       ),
       body: Form(
+        key: _formKey,
         child: ListView(
           padding: EdgeInsets.all(30),
           shrinkWrap: true,
@@ -96,6 +106,7 @@ class _RegisterFormState extends State<RegisterForm> {
               height: 5,
             ),
             TextFormField(
+              validator: (value) => FormValidation.validateName(value),
               controller: _namecontroller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -126,6 +137,7 @@ class _RegisterFormState extends State<RegisterForm> {
               height: 5,
             ),
             TextFormField(
+              validator: (value) => FormValidation.validateEmail(value),
               controller: _emailcontroller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -153,6 +165,7 @@ class _RegisterFormState extends State<RegisterForm> {
               height: 5,
             ),
             TextFormField(
+              validator: (value) => FormValidation.validateContact(value),
               controller: _contactcontroller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -184,6 +197,7 @@ class _RegisterFormState extends State<RegisterForm> {
               height: 5,
             ),
             TextFormField(
+              validator: (value) => FormValidation.validateValue(value),
               controller: _addresscontroller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -212,6 +226,7 @@ class _RegisterFormState extends State<RegisterForm> {
             ),
             TextFormField(
               controller: _passwordcontroller,
+              validator: (value) => FormValidation.validatePassword(value),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -238,6 +253,8 @@ class _RegisterFormState extends State<RegisterForm> {
               height: 5,
             ),
             TextFormField(
+              validator: (value) => FormValidation.validateConfirmPassword(
+                  value, _passwordcontroller.text),
               controller: _repeatcontroller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
@@ -257,7 +274,11 @@ class _RegisterFormState extends State<RegisterForm> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                register();
+                if (_formKey.currentState!.validate()) {
+                  register(); // Only call register if the form is valid
+                } else {
+                  print("Form is not valid");
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,

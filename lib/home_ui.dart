@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:user_app/account.dart';
 import 'package:user_app/add_child.dart';
+import 'package:user_app/child_payment_view.dart';
 import 'package:user_app/fees_page.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/parent_dashboard.dart';
 import 'package:confetti/confetti.dart';
+import 'package:user_app/user_login.dart';
+import 'package:user_app/view_notification.dart';
 import 'package:user_app/wish_birthday.dart';
 
 class HomeUi extends StatefulWidget {
@@ -36,11 +40,35 @@ class _HomeUiState extends State<HomeUi> {
 
   Future<void> checkAndShowBirthdayDialogue(BuildContext context) async {
     List<Map<String, dynamic>> todaysBirthdays = await getTodaysBirthdays();
+    String userId = supabase.auth.currentUser!.id;
 
     if (todaysBirthdays.isNotEmpty) {
-      String names =
-          todaysBirthdays.map((child) => child['child_name']).join(', ');
-      birthdayDialogue(context, names);
+      // Check if the user has already wished today
+      bool hasWished = await hasUserWishedToday(userId);
+
+      if (!hasWished) {
+        String names =
+            todaysBirthdays.map((child) => child['child_name']).join(', ');
+        birthdayDialogue(context, names);
+      }
+    }
+  }
+
+  Future<bool> hasUserWishedToday(String userId) async {
+    String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    try {
+      final response = await supabase
+          .from('tbl_wish')
+          .select()
+          .eq('parent_id', userId)
+          .filter('created_at', 'gte', '$today 00:00:00') // Start of today
+          .filter('created_at', 'lt', '$today 23:59:59'); // End of today
+
+      return response.isNotEmpty;
+    } catch (e) {
+      print("Error checking wish status: $e");
+      return false;
     }
   }
 
@@ -144,13 +172,16 @@ class _HomeUiState extends State<HomeUi> {
   }
 
   List<Map<String, dynamic>> childdetails = [];
+  List<Map<String, dynamic>> parentDetails = [];
   final PageController _pageController = PageController();
-
+  String userId = supabase.auth.currentUser!.id;
   @override
   void initState() {
     super.initState();
     checkAndShowBirthdayDialogue(context);
     fetchChild();
+    fetchParent();
+    hasUserWishedToday(userId);
     _confettiController.play();
   }
 
@@ -170,6 +201,22 @@ class _HomeUiState extends State<HomeUi> {
     }
   }
 
+  Future<void> fetchParent() async {
+    try {
+      String userId = supabase.auth.currentUser!.id;
+      print("User: $userId");
+      final response =
+          await supabase.from('tbl_parent').select().eq('id', userId);
+      if (response.isNotEmpty) {
+        setState(() {
+          parentDetails = response;
+        });
+      }
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
   Future<void> viewStatus(int childId, int childStatus) async {
     if (childStatus == 0) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -179,8 +226,8 @@ class _HomeUiState extends State<HomeUi> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => FeesPage(
-                    idChild: childId,
+              builder: (context) => ChildPaymentView(
+                    idch: childId,
                   )));
     } else if (childStatus == 3) {
       Navigator.push(
@@ -188,10 +235,29 @@ class _HomeUiState extends State<HomeUi> {
           MaterialPageRoute(
               builder: (context) => ParentDashboard(childId: childId)));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Application Rejected, your data will be removed soon"),
-      ));
-      await supabase.from('tbl_child').delete().eq('id', childId);
+      try {
+        final response = await supabase
+            .from('tbl_child')
+            .select('rejection_reason')
+            .eq('id', childId)
+            .single();
+
+        String rejectionReason =
+            response['rejection_reason'] ?? "No reason provided";
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Application Rejected: $rejectionReason"),
+        ));
+
+        // Optionally delete the rejected record (if necessary)
+        await supabase.from('tbl_child').delete().eq('id', childId);
+      } catch (e) {
+        print("Error fetching rejection reason: $e");
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text("Application Rejected, but reason couldn't be retrieved."),
+        ));
+      }
     }
   }
 
@@ -199,7 +265,14 @@ class _HomeUiState extends State<HomeUi> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.white), // Hamburger menu icon
+            onPressed: () {
+              Scaffold.of(context).openDrawer(); // Opens the drawer
+            },
+          ),
+        ),
         backgroundColor: Colors.deepPurple,
         title: GestureDetector(
           onTap: () {},
@@ -213,24 +286,74 @@ class _HomeUiState extends State<HomeUi> {
             ),
           ),
         ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.brightness_6),
-          //   onPressed: () {
-          //     Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
-          //   },
-          // )
-          IconButton(
-              onPressed: () {
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) => ViewNotification(),
-                //     ));
-                // birthdayDialogue();
+        actions: [],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              accountName: Text(
+                parentDetails.isNotEmpty
+                    ? parentDetails[0]['parent_name'] ?? "Guest User"
+                    : "Guest User",
+                style: TextStyle(color: Colors.white),
+              ),
+              accountEmail: Text(
+                parentDetails.isNotEmpty
+                    ? parentDetails[0]['parent_email'] ?? "No email provided"
+                    : "No email provided",
+                style: TextStyle(color: Colors.white70),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                backgroundImage: parentDetails.isNotEmpty &&
+                        parentDetails[0]['parent_photo'] != null
+                    ? NetworkImage(parentDetails[0]['parent_photo'])
+                    : null,
+                child: parentDetails.isNotEmpty &&
+                        parentDetails[0]['parent_photo'] == null
+                    ? Icon(Icons.person, color: Colors.grey)
+                    : null,
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person, color: Colors.deepPurple),
+              title: Text("Profile"),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AccountPage()));
               },
-              icon: Icon(Icons.notifications, color: Colors.white))
-        ],
+            ),
+            ListTile(
+              leading: Icon(Icons.notifications, color: Colors.deepPurple),
+              title: Text("Notifications"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewNotification(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.deepPurple),
+              title: Text("Logout"),
+              onTap: () async {
+                await supabase.auth.signOut();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserLogin(),
+                  ),
+                  (Route<dynamic> route) => false,
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -362,12 +485,20 @@ class _HomeUiState extends State<HomeUi> {
                   )
                 : Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text(
-                      "No child profiles added yet!",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      child: Center(
+                        child: IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddChild(),
+                                  ));
+                            },
+                            icon: Icon(Icons.add)),
+                      ),
+                    )),
           ],
         ),
       ),

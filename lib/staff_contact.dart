@@ -38,7 +38,7 @@ class _StaffPageState extends State<StaffPage> {
       appBar: AppBar(
           iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: Colors.deepPurple,
-          title: Text('Staff Directory')),
+          title: Text('Staff Directory',style:TextStyle(color: Colors.white))),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: fetchStaff(),
         builder: (context, snapshot) {

@@ -1,0 +1,2 @@
+D:/MainProject/Project/user_app/android/app/.cxx/RelWithDebInfo/6y3e6s4e/x86/CMakeFiles/edit_cache.dir
+D:/MainProject/Project/user_app/android/app/.cxx/RelWithDebInfo/6y3e6s4e/x86/CMakeFiles/rebuild_cache.dir

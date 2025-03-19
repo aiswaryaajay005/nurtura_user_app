@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:user_app/main.dart';
 
 class MonthlyFees extends StatefulWidget {
-  const MonthlyFees({super.key});
+  final int fees;
+  final int childId;
+  const MonthlyFees({super.key, required this.fees, required this.childId});
 
   @override
   State<MonthlyFees> createState() => _MonthlyFeesState();
@@ -9,8 +12,26 @@ class MonthlyFees extends StatefulWidget {
 
 class _MonthlyFeesState extends State<MonthlyFees>
     with SingleTickerProviderStateMixin {
-  int fee = 8500;
   late TabController _tabController;
+
+  Future<void> paymentDetails() async {
+    try {
+      // await supabase.from('tbl_payments').insert();
+    } catch (e) {}
+  }
+
+  Future<void> addPayments() async {
+    try {
+      await supabase.from('tbl_payment').insert({
+        'child_id': widget.childId,
+        'amount_due': widget.fees,
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Inserted Successfully!")));
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   void initState() {
@@ -70,7 +91,7 @@ class _MonthlyFeesState extends State<MonthlyFees>
                             fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                       trailing: Text(
-                        "₹$fee",
+                        "${widget.fees}",
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
@@ -125,7 +146,9 @@ class _MonthlyFeesState extends State<MonthlyFees>
               TextFormField(decoration: InputDecoration()),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  addPayments();
+                },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: Colors.deepPurple,
@@ -155,7 +178,9 @@ class _MonthlyFeesState extends State<MonthlyFees>
               TextFormField(decoration: InputDecoration()),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  addPayments();
+                },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: Colors.deepPurple,
