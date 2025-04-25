@@ -64,6 +64,7 @@ class _ChildPaymentViewState extends State<ChildPaymentView> {
     return Scaffold(
       backgroundColor: Colors.deepPurple[50], // Light background
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Colors.deepPurple,
         title: Text(
           "Payment Details",

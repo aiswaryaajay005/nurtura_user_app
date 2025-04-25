@@ -11,6 +11,7 @@ class UserLogin extends StatefulWidget {
 }
 
 class _UserLoginState extends State<UserLogin> {
+  bool _obscure = true;
   TextEditingController _emailcontroller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   TextEditingController _passwordcontroller = TextEditingController();
@@ -111,15 +112,26 @@ class _UserLoginState extends State<UserLogin> {
                 SizedBox(height: 30),
                 TextFormField(
                   controller: _passwordcontroller,
-                  obscureText: true, // Hides password input
+                  obscureText: _obscure, // Hides password input
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Password',
                     labelStyle: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.w500),
                     hintText: 'Your password',
-                    suffixIcon:
-                        Icon(Icons.visibility, color: Colors.deepPurple),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_off
+                            : Icons.remove_red_eye_outlined,
+                        color: Colors.deepPurple,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscure = !_obscure;
+                        });
+                      },
+                    ),
                     focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.deepPurple)),
                   ),

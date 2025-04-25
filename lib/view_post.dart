@@ -11,10 +11,9 @@ class ViewPost extends StatefulWidget {
 
 class _ViewPostState extends State<ViewPost> {
   List<Map<String, dynamic>> post = [];
-  Map<int, int> likesCount = {}; // Stores number of likes per post
-  Set<int> userLikedPosts = {}; // Stores posts the user has liked
+  Map<int, int> likesCount = {};
+  Set<int> userLikedPosts = {};
   bool isLoading = true;
-  int userId = 1; // Example user ID (replace with actual user session ID)
 
   Future<void> fetchPost() async {
     try {
@@ -28,7 +27,7 @@ class _ViewPostState extends State<ViewPost> {
       // Fetch likes after fetching posts
       await fetchLikes();
     } catch (e) {
-      print("Error: $e");
+      print("Error fetching posts: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -38,7 +37,15 @@ class _ViewPostState extends State<ViewPost> {
 
   Future<void> fetchLikes() async {
     try {
+      final user = supabase.auth.currentUser;
+      if (user == null) {
+        print("User not logged in");
+        return;
+      }
+      final userId = user.id; // Use UUID from auth
+
       final likesResponse = await supabase.from('tbl_like').select();
+      print("Likes response: $likesResponse"); // Debug
 
       Map<int, int> likeCounts = {};
       Set<int> likedPosts = {};
@@ -54,6 +61,7 @@ class _ViewPostState extends State<ViewPost> {
       setState(() {
         likesCount = likeCounts;
         userLikedPosts = likedPosts;
+        print("User liked posts: $userLikedPosts"); // Debug
       });
     } catch (e) {
       print("Error fetching likes: $e");
@@ -62,15 +70,14 @@ class _ViewPostState extends State<ViewPost> {
 
   Future<void> toggleLike(int postId) async {
     try {
-      final user = supabase.auth.currentUser; // Get the logged-in user
+      final user = supabase.auth.currentUser;
       if (user == null) {
         print("User not logged in");
         return;
       }
 
-      final userId = user.id; // Get user_id as UUID (String)
+      final userId = user.id;
 
-      // Check if user already liked the post
       final existingLike = await supabase
           .from('tbl_like')
           .select()
@@ -79,7 +86,6 @@ class _ViewPostState extends State<ViewPost> {
           .maybeSingle();
 
       if (existingLike != null) {
-        // Unlike (delete the like)
         await supabase
             .from('tbl_like')
             .delete()
@@ -90,10 +96,9 @@ class _ViewPostState extends State<ViewPost> {
           likesCount[postId] = (likesCount[postId] ?? 1) - 1;
         });
       } else {
-        // Like (insert new row)
         await supabase.from('tbl_like').insert({
-          'user_id': userId, // UUID as a String
-          'post_id': postId, // int8 as an integer
+          'user_id': userId,
+          'post_id': postId,
           'created_at': DateTime.now().toIso8601String(),
         });
 
@@ -118,7 +123,7 @@ class _ViewPostState extends State<ViewPost> {
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Colors.deepPurple[300],
+        backgroundColor: Colors.deepPurple,
         title: Text('View Post',
             style: TextStyle(
                 fontSize: 20,

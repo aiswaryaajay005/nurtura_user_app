@@ -109,91 +109,139 @@ class _FeesPaymentState extends State<FeesPayment> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Fees Due"),
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text(
+          "Fees Due",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.deepPurple,
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: isLoading
-                  ? Text("No due")
-                  : totalDueAmount == 0
-                      ? Text(
-                          "No pending fees!",
-                          style: TextStyle(
-                            fontSize: 20,
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Total Fees Due:",
-                              style: TextStyle(fontSize: 22),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Center(
+                child: isLoading
+                    ? Text(
+                        "No due",
+                        style: TextStyle(fontSize: 20, color: Colors.grey),
+                      )
+                    : totalDueAmount == 0
+                        ? Text(
+                            "No pending fees!",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
                             ),
-                            SizedBox(height: 10),
-                            Text(
-                              "₹$totalDueAmount",
-                              style: TextStyle(
-                                  fontSize: 26,
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Total Fees Due:",
+                                style: TextStyle(fontSize: 22),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                "₹$totalDueAmount",
+                                style: TextStyle(
+                                  fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.amber),
-                            ),
-                            SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
+                                  color: Colors.amber,
+                                ),
+                              ),
+                              SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => MonthlyFees(
                                         fees: totalDueAmount,
                                         childId: widget.idChild,
                                       ),
-                                    ));
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.deepPurple,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
-                                textStyle: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.deepPurple,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(color: Colors.deepPurple),
+                                  ),
+                                  textStyle: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                child: Text("Proceed to Pay"),
                               ),
-                              child: Text("Proceed to Pay"),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+              ),
             ),
-          ),
-          Divider(),
-          Text(
-            "Payment History",
-            style: TextStyle(fontSize: 26),
-          ),
-          SizedBox(
-              height: 400,
-              width: 400,
-              child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: payments.length,
-                  itemBuilder: (context, index) {
-                    DateTime dateTime =
-                        DateTime.parse(payments[index]['created_at']);
-                    String formattedDate =
-                        DateFormat('yyyy-MM-dd').format(dateTime);
-                    return Card(
-                      child: Column(
-                        children: [
-                          Text("Payment date: $formattedDate"),
-                          Text(
-                              "Payment Amount:" + payments[index]['amount_due'])
-                        ],
+            Divider(
+              color: Colors.deepPurple,
+              thickness: 2,
+            ),
+            Text(
+              "Payment History",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            SizedBox(height: 10),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: payments.isEmpty
+                    ? Center(
+                        child: Text(
+                          "No payment history available",
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: payments.length,
+                        itemBuilder: (context, index) {
+                          DateTime dateTime =
+                              DateTime.parse(payments[index]['created_at']);
+                          String formattedDate =
+                              DateFormat('yyyy-MM-dd').format(dateTime);
+
+                          return Card(
+                            color: Colors.white,
+                            elevation: 4,
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            child: ListTile(
+                              leading:
+                                  Icon(Icons.payment, color: Colors.deepPurple),
+                              title: Text(
+                                "Payment Date: $formattedDate",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                "Amount Paid: ₹${payments[index]['amount_due']}",
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.amber),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  }))
-        ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

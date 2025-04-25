@@ -14,6 +14,8 @@ class RegisterForm extends StatefulWidget {
 }
 
 class _RegisterFormState extends State<RegisterForm> {
+  bool _obscure = true;
+  bool obscure = true;
   final _formKey = GlobalKey<FormState>();
   TextEditingController _namecontroller = TextEditingController();
   TextEditingController _emailcontroller = TextEditingController();
@@ -225,6 +227,7 @@ class _RegisterFormState extends State<RegisterForm> {
               style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
             ),
             TextFormField(
+              obscureText: _obscure,
               controller: _passwordcontroller,
               validator: (value) => FormValidation.validatePassword(value),
               decoration: InputDecoration(
@@ -235,7 +238,19 @@ class _RegisterFormState extends State<RegisterForm> {
                 hintText: 'Enter your password',
                 hintStyle:
                     TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-                suffixIcon: Icon(Icons.visibility, color: Colors.deepPurple),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscure
+                        ? Icons.visibility_off
+                        : Icons.remove_red_eye_outlined,
+                    color: Colors.deepPurple,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscure = !_obscure;
+                    });
+                  },
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: Colors.deepPurple),
@@ -253,6 +268,7 @@ class _RegisterFormState extends State<RegisterForm> {
               height: 5,
             ),
             TextFormField(
+              obscureText: obscure,
               validator: (value) => FormValidation.validateConfirmPassword(
                   value, _passwordcontroller.text),
               controller: _repeatcontroller,
@@ -264,7 +280,19 @@ class _RegisterFormState extends State<RegisterForm> {
                 hintText: 'Repeat your password',
                 hintStyle:
                     TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-                suffixIcon: Icon(Icons.visibility, color: Colors.deepPurple),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscure
+                        ? Icons.visibility_off
+                        : Icons.remove_red_eye_outlined,
+                    color: Colors.deepPurple,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      obscure = !obscure;
+                    });
+                  },
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: Colors.deepPurple),

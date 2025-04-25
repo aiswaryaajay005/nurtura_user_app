@@ -34,7 +34,10 @@ class _AboutUsState extends State<AboutUs> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("About Us", style: TextStyle(fontFamily: "AmsterdamThree")),
+        iconTheme: IconThemeData(color: Colors.white),
+        title: Text("About Us",
+            style:
+                TextStyle(fontFamily: "AmsterdamThree", color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.deepPurple.shade700,
       ),

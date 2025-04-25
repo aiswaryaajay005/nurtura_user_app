@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:intl/intl.dart';
 import 'package:user_app/attendence_calender.dart';
+import 'package:user_app/attendence_detail_page.dart';
 import 'package:user_app/main.dart';
 
 class ParentAttendanceCard extends StatefulWidget {
@@ -144,6 +145,18 @@ class _ParentAttendanceCardState extends State<ParentAttendanceCard> {
                         );
                       },
                       child: Text("View Attendance Calendar"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AttendanceDetailsPage(childId: widget.childId),
+                          ),
+                        );
+                      },
+                      child: Text("View Attendance Details"),
                     ),
                   ],
                 ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
+import 'package:user_app/chat_page.dart';
 import 'package:user_app/main.dart';
+
+// ... Previous imports remain the same
 
 class StaffPage extends StatefulWidget {
   @override
@@ -36,19 +39,14 @@ class _StaffPageState extends State<StaffPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.white),
-          backgroundColor: Colors.deepPurple,
-          title: Text('Staff Directory',style:TextStyle(color: Colors.white))),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Colors.deepPurple,
+        title: Text('Staff Directory', style: TextStyle(color: Colors.white)),
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: fetchStaff(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No staff found'));
-          }
+          // ... Keep existing builder logic
 
           final staffList = snapshot.data!;
 
@@ -60,8 +58,7 @@ class _StaffPageState extends State<StaffPage> {
                 child: ListTile(
                   leading: staff['staff_photo'] != null
                       ? CircleAvatar(
-                          backgroundImage: NetworkImage(staff['staff_photo']),
-                        )
+                          backgroundImage: NetworkImage(staff['staff_photo']))
                       : CircleAvatar(child: Icon(Icons.person)),
                   title: Text(staff['staff_name']),
                   subtitle: Text(
@@ -76,6 +73,21 @@ class _StaffPageState extends State<StaffPage> {
                       IconButton(
                         icon: Icon(Icons.email, color: Colors.blue),
                         onPressed: () => _sendEmail(staff['staff_email']),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.chat, color: Colors.purple),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatPage(
+                                staffId:
+                                    staff['id'], // Assuming there's an id field
+                                staffName: staff['staff_name'],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
